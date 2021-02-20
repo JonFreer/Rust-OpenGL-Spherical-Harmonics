@@ -6,25 +6,20 @@ extern crate sdl2;
 
 
 pub mod render_gl;
-
+mod triangle;
+pub mod debug;
 pub mod resources;
 // use crate::resources::Resources;
 use std::path::Path;
 use failure::err_msg;
 use render_gl::data;
+use render_gl::buffer;
 
-#[derive(VertexAttribPointers, Copy, Clone, Debug)]
-#[repr(C, packed)]
-struct Vertex {
-    #[location = 0]
-    pos: data::f32_f32_f32,
-    #[location = 1]
-    clr: data::f32_f32_f32,
-}
+
 
 fn main() {
     if let Err(e) = run() {
-        println!("{}", failure_to_string(e));
+        println!("{}", debug::failure_to_string(e));
     }
 }
 
@@ -55,57 +50,8 @@ fn run() -> Result<(), failure::Error> {
         gl.ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
-    
+    let triangle = triangle::Triangle::new(&res, &gl)?;
 
-    //load shaders into program
-    let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle").unwrap();
-
-    // tell program to use shaders
-    shader_program.set_used();
-
-    //define vertexes
-    let vertices: Vec<Vertex> = vec![
-        Vertex { pos: (0.5, -0.5, 0.0).into(),  clr: (1.0, 0.0, 0.0).into() }, // bottom right
-        Vertex { pos: (-0.5, -0.5, 0.0).into(), clr: (0.0, 1.0, 0.0).into() }, // bottom left
-        Vertex { pos: (0.0,  0.5, 0.0).into(),  clr: (0.0, 0.0, 1.0).into() },  // top
-        Vertex { pos: (0.5,  0.5, 0.0).into(),  clr: (1.0, 1.0, 1.0).into() },
-        Vertex { pos: (0.5,  0.1, 0.0).into(),  clr: (0.0, 0.0, 1.0).into() },
-        Vertex { pos: (0.2,  0.1, 0.0).into(),  clr: (0.0, 0.0, 1.0).into() }
-    ];
-
-    let mut vbo: gl::types::GLuint = 0;
-    unsafe {
-        //vbo is the vbo ID
-        gl.GenBuffers(1, &mut vbo);
-    }
-
-    // Set array buffer size and type
-    unsafe {
-        gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl.BufferData(
-            gl::ARRAY_BUFFER, // target (buffer type)
-            (vertices.len() * std::mem::size_of::<Vertex>()) as gl::types::GLsizeiptr, // size of data in bytes
-            vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
-            gl::STATIC_DRAW, // usage: Switch to DYNAMIC_DRAW for changing model http://docs.gl/gl4/glBufferData
-        );
-        gl.BindBuffer(gl::ARRAY_BUFFER, 0); // unbind the buffer
-    }
-
-    // Create the VAO, with ID of 0
-    let mut vao: gl::types::GLuint = 0;
-    unsafe {
-        gl.GenVertexArrays(1, &mut vao);
-    }
-    unsafe {
-        gl.BindVertexArray(vao); //make it current by binding it
-
-        gl.BindBuffer(gl::ARRAY_BUFFER, vbo); //bind VBO again, "load it"
-
-        Vertex::vertex_attrib_pointers(&gl); //set up VAO
-
-        gl.BindBuffer(gl::ARRAY_BUFFER, 0); //Unbind VBO and VAO as not needed
-        gl.BindVertexArray(0);
-    }
 
     // list for events
     let mut event_pump = sdl.event_pump().map_err(err_msg)?;
@@ -122,42 +68,10 @@ fn run() -> Result<(), failure::Error> {
             gl.Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        shader_program.set_used();
-        unsafe {
-            gl.BindVertexArray(vao);
-            gl.DrawArrays(
-                gl::TRIANGLES, // mode
-                0,             // starting index in the enabled arrays
-                6,             // number of indices to be rendered
-            );
-        }
-
+        triangle.render(&gl);
+  
         window.gl_swap_window();
     }
     Ok(())
 }
 
-pub fn failure_to_string(e: failure::Error) -> String {
-    use std::fmt::Write;
-
-    let mut result = String::new();
-
-    for (i, cause) in e.iter_chain().collect::<Vec<_>>().into_iter().rev().enumerate() {
-        if i > 0 {
-            let _ = writeln!(&mut result, "   Which caused the following issue:");
-        }
-        let _ = write!(&mut result, "{}", cause);
-        if let Some(backtrace) = cause.backtrace() {
-            let backtrace_str = format!("{}", backtrace);
-            if backtrace_str.len() > 0 {
-                let _ = writeln!(&mut result, " This happened at {}", backtrace);
-            } else {
-                let _ = writeln!(&mut result);
-            }
-        } else {
-            let _ = writeln!(&mut result);
-        }
-    }
-
-    result
-}
