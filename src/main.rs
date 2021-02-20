@@ -3,7 +3,13 @@ extern crate sdl2;
 
 pub mod render_gl;
 
+pub mod resources;
+use crate::resources::Resources;
+use std::path::Path;
+
 fn main() {
+    let res = resources::Resources::from_relative_exe_path(Path::new("assets")).unwrap();
+
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
 
@@ -31,18 +37,20 @@ fn main() {
     let mut event_pump = sdl.event_pump().unwrap();
 
     // load shaders from file
-    use std::ffi::CString;
+    // use std::ffi::CString;
 
-    let vert_shader =
-        render_gl::Shader::from_vert_source(&gl,&CString::new(include_str!("triangle.vert")).unwrap())
-            .unwrap();
+    // let vert_shader =
+    //     render_gl::Shader::from_vert_source(&gl,&CString::new(include_str!("triangle.vert")).unwrap())
+    //         .unwrap();
 
-    let frag_shader =
-        render_gl::Shader::from_frag_source(&gl,&CString::new(include_str!("triangle.frag")).unwrap())
-            .unwrap();
+    // let frag_shader =
+    //     render_gl::Shader::from_frag_source(&gl,&CString::new(include_str!("triangle.frag")).unwrap())
+    //         .unwrap();
 
-    //load shaders into program
-    let shader_program = render_gl::Program::from_shaders(&gl,&[vert_shader, frag_shader]).unwrap();
+    // //load shaders into program
+    // let shader_program = render_gl::Program::from_shaders(&gl,&[vert_shader, frag_shader]).unwrap();
+    let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle").unwrap();
+
 
     // tell program to use shaders
     shader_program.set_used();
