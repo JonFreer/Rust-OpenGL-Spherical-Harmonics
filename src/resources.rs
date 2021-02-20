@@ -3,10 +3,13 @@ use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
-#[derive(Debug)]
+#[derive(Debug,Fail)]
 pub enum Error {
-    Io(io::Error),
+    #[fail(display = "I/O error")]
+    Io(#[cause] io::Error),
+    #[fail(display = "Failed to read CString from file that contains 0")]
     FileContainsNil,
+    #[fail(display = "Failed get executable path")]
     FailedToGetExePath,
 }
 
@@ -33,7 +36,7 @@ impl Resources {
     }
 
     pub fn load_cstring(&self, resource_name: &str) -> Result<ffi::CString, Error> {
-        
+
         let mut file = fs::File::open(resource_name_to_path(&self.root_path, resource_name))?;
 
         // allocate buffer of the same size as file
