@@ -7,6 +7,7 @@ extern crate sdl2;
 
 pub mod render_gl;
 mod triangle;
+mod ply_model;
 pub mod debug;
 pub mod resources;
 // use crate::resources::Resources;
@@ -14,7 +15,7 @@ use std::path::Path;
 use failure::err_msg;
 use render_gl::data;
 use render_gl::buffer;
-
+extern crate ply_rs;
 
 
 fn main() {
@@ -51,9 +52,10 @@ fn run() -> Result<(), failure::Error> {
     }
 
     let triangle = triangle::Triangle::new(&res, &gl)?;
+    let plyModel = ply_model::PlyModel::new(&res, &gl)?;
 
 
-    // list for events
+    // listen for events
     let mut event_pump = sdl.event_pump().map_err(err_msg)?;
     
     'main: loop {
@@ -69,7 +71,7 @@ fn run() -> Result<(), failure::Error> {
         }
 
         triangle.render(&gl);
-  
+        plyModel.render(&gl);
         window.gl_swap_window();
     }
     Ok(())

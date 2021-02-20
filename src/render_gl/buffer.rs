@@ -92,3 +92,58 @@ impl Drop for VertexArray{
         }
     }
 }
+
+
+ 
+pub struct ElementBuffer {
+    gl: gl::Gl,
+    ebo: gl::types::GLuint,
+}
+
+impl ElementBuffer{
+    pub fn new(gl: &gl::Gl) -> ElementBuffer{
+        let mut ebo: gl::types::GLuint = 0;
+
+        unsafe{
+            gl.GenBuffers(1,&mut ebo);
+        }
+
+        ElementBuffer {
+            gl: gl.clone(),
+            ebo
+        }
+
+    }
+
+    pub fn bind(&self){
+        unsafe{
+            self.gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER,self.ebo);
+        }
+    }
+
+
+    pub fn unbind(&self){
+        unsafe{
+            self.gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER,0);
+        }
+    }
+
+    pub fn static_draw_data<T>(&self, data: &[T]){
+        unsafe{
+            self.gl.BufferData(
+                gl::ELEMENT_ARRAY_BUFFER, // target
+                (data.len() * ::std::mem::size_of::<T>()) as gl::types::GLsizeiptr, // size of data in bytes
+                data.as_ptr() as *const gl::types::GLvoid, // pointer to data
+                gl::STATIC_DRAW, // usage
+            );
+        }
+    }
+}
+
+impl Drop for ElementBuffer{
+    fn drop(&mut self){
+        unsafe{
+            self.gl.DeleteBuffers(1, &mut self.ebo);
+        }
+    }
+}
