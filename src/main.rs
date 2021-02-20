@@ -1,7 +1,9 @@
 #[macro_use] extern crate failure;
-
+#[macro_use] extern crate render_gl_derive;
 extern crate gl;
 extern crate sdl2;
+
+
 
 pub mod render_gl;
 
@@ -9,7 +11,16 @@ pub mod resources;
 // use crate::resources::Resources;
 use std::path::Path;
 use failure::err_msg;
+use render_gl::data;
 
+#[derive(VertexAttribPointers, Copy, Clone, Debug)]
+#[repr(C, packed)]
+struct Vertex {
+    #[location = 0]
+    pos: data::f32_f32_f32,
+    #[location = 1]
+    clr: data::f32_f32_f32,
+}
 
 fn main() {
     if let Err(e) = run() {
@@ -53,11 +64,13 @@ fn run() -> Result<(), failure::Error> {
     shader_program.set_used();
 
     //define vertexes
-    let vertices: Vec<f32> = vec![
-        // positions      // colors
-        0.5, -0.5, 0.0, 1.0, 0.0, 0.0, // bottom right
-        -0.5, -0.5, 0.0, 0.0, 1.0, 0.0, // bottom left
-        0.0, 0.5, 0.0, 0.0, 0.0, 1.0, // top
+    let vertices: Vec<Vertex> = vec![
+        Vertex { pos: (0.5, -0.5, 0.0).into(),  clr: (1.0, 0.0, 0.0).into() }, // bottom right
+        Vertex { pos: (-0.5, -0.5, 0.0).into(), clr: (0.0, 1.0, 0.0).into() }, // bottom left
+        Vertex { pos: (0.0,  0.5, 0.0).into(),  clr: (0.0, 0.0, 1.0).into() },  // top
+        Vertex { pos: (0.5,  0.5, 0.0).into(),  clr: (1.0, 1.0, 1.0).into() },
+        Vertex { pos: (0.5,  0.1, 0.0).into(),  clr: (0.0, 0.0, 1.0).into() },
+        Vertex { pos: (0.2,  0.1, 0.0).into(),  clr: (0.0, 0.0, 1.0).into() }
     ];
 
     let mut vbo: gl::types::GLuint = 0;
@@ -71,7 +84,7 @@ fn run() -> Result<(), failure::Error> {
         gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl.BufferData(
             gl::ARRAY_BUFFER, // target (buffer type)
-            (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // size of data in bytes
+            (vertices.len() * std::mem::size_of::<Vertex>()) as gl::types::GLsizeiptr, // size of data in bytes
             vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
             gl::STATIC_DRAW, // usage: Switch to DYNAMIC_DRAW for changing model http://docs.gl/gl4/glBufferData
         );
@@ -86,27 +99,9 @@ fn run() -> Result<(), failure::Error> {
     unsafe {
         gl.BindVertexArray(vao); //make it current by binding it
 
-        gl.BindBuffer(gl::ARRAY_BUFFER, vbo); //bind VBO again
-        gl.EnableVertexAttribArray(0); // this is "layout (location = 0)" in vertex shader
-        gl.VertexAttribPointer(
-            0,         // index of the generic vertex attribute ("layout (location = 0)")
-            3,         // the number of components per generic vertex attribute
-            gl::FLOAT, // data type
-            gl::FALSE, // normalized (int-to-float conversion)
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
-            std::ptr::null(),                                     // offset of the first component
-        );
+        gl.BindBuffer(gl::ARRAY_BUFFER, vbo); //bind VBO again, "load it"
 
-        gl.EnableVertexAttribArray(1); // this is "layout (location = 0)" in vertex shader
-        gl.VertexAttribPointer(
-            1, // index of the generic vertex attribute ("layout (location = 0)") : really location = 1
-            3, // the number of components per generic vertex attribute
-            gl::FLOAT, // data type
-            gl::FALSE, // normalized (int-to-float conversion)
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
-            (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid // offset of the first component
-        );
-
+        Vertex::vertex_attrib_pointers(&gl); //set up VAO
 
         gl.BindBuffer(gl::ARRAY_BUFFER, 0); //Unbind VBO and VAO as not needed
         gl.BindVertexArray(0);
@@ -133,7 +128,7 @@ fn run() -> Result<(), failure::Error> {
             gl.DrawArrays(
                 gl::TRIANGLES, // mode
                 0,             // starting index in the enabled arrays
-                3,             // number of indices to be rendered
+                6,             // number of indices to be rendered
             );
         }
 
