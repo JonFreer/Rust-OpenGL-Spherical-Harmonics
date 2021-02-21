@@ -12,7 +12,12 @@ struct Vertex {
     pos: data::f32_f32_f32,
     #[location = 1]
     clr: data::f32_f32_f32,
+    #[location = 2]
+    nrm: data::f32_f32_f32,
+    
+    
 }
+
 
 pub struct PlyModel {
     program: render_gl::Program,
@@ -20,7 +25,7 @@ pub struct PlyModel {
     vao: buffer::VertexArray,
     ebo: buffer::ElementBuffer,
 }
-
+#[derive(Debug)]
 struct Face{
     points:(u32,u32,u32)
 }
@@ -28,10 +33,10 @@ struct Face{
 impl PlyModel {
     pub fn new(res: &Resources, gl: &gl::Gl) -> Result<PlyModel, failure::Error> {
         //load shaders into program
-        let program = render_gl::Program::from_res(&gl, &res, "shaders/triangle")?;
+        let program = render_gl::Program::from_res(&gl, &res, "shaders/model")?;
   
         // set up a reader, in this case a file.
-        let path = "assets/models/res.ply";
+        let path = "assets/models/res2.ply";
         let mut f = std::fs::File::open(path).unwrap();
 
         // create a parser
@@ -73,7 +78,8 @@ impl PlyModel {
             }
             vertices.push(Vertex{
                 pos:(x,y,z).into(),
-                clr: (r/255.0,g/255.0,b/255.0).into()
+                clr: (r/255.0,g/255.0,b/255.0).into(),
+                nrm:(0.0,0.0,0.0).into()
             });
             
         }
@@ -92,6 +98,22 @@ impl PlyModel {
             }
             // let ply::ply::Property::ListInt(v) = &f["vertex_indices"];
             faces.push(Face{points:(a as u32,b as u32,c as u32)});
+        }
+
+        //Calculate Normals
+
+        for f in &faces{ //sum normals for all faces to vertices
+            let a = vertices[f.points.0 as usize].pos;
+            let b = vertices[f.points.1 as usize].pos;
+            let c = vertices[f.points.2 as usize].pos;
+            let normal = (b-a) * (c-a);
+            vertices[f.points.0 as usize].nrm += normal;
+            vertices[f.points.1 as usize].nrm += normal;
+            vertices[f.points.2 as usize].nrm += normal;
+        }
+
+        for i in 0..vertices.len(){
+            vertices[i].nrm.normalize();
         }
 
         //create and load data into VBO
