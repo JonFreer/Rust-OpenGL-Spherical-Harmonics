@@ -58,7 +58,7 @@ impl Sub for f32_f32_f32{
         Self{
             d0:self.d0-other.d0, 
             d1:self.d1-other.d1, 
-            d2:self.d2 - other.d2
+            d2:self.d2 -other.d2
         }
     }
 }
@@ -67,9 +67,9 @@ impl Mul for f32_f32_f32{
     type Output = Self;
     fn mul(self, other: Self) -> Self::Output{
         Self{
-            d0: self.d1 * other.d2  - self.d2 * other.d1,
-            d1: self.d2 * other.d0 - self.d0 - other.d2,
-            d2: self.d0 * other.d1 - self.d1 - other.d0
+            d0: self.d1 * other.d2 - self.d2 * other.d1,
+            d1: self.d2 * other.d0 - self.d0 * other.d2,
+            d2: self.d0 * other.d1 - self.d1 * other.d0
         }
     }
 }

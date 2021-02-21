@@ -1,5 +1,5 @@
 use gl;
-
+use crate::render_gl::{data};
 use std;
 use std::ffi::{CStr, CString};
 use crate::resources::{self, Resources};
@@ -97,6 +97,24 @@ impl Program {
 
     pub fn id(&self) -> gl::types::GLuint {
         self.id
+    }
+
+    pub fn set_vec3(&self, name: &str , val : data::f32_f32_f32){//&CStr
+        unsafe{
+            let cstring = CString::new(name).expect("CString::new failed");
+            let cstr = CStr::from_bytes_with_nul_unchecked(cstring.to_bytes_with_nul());
+            self.gl.Uniform3f(self.gl.GetUniformLocation(self.id,cstr.as_ptr() as *const gl::types::GLchar),val.d0,val.d1,val.d2);
+        }
+        
+    }
+
+    pub fn set_vec3_array(&self, name:&str , val : Vec<data::f32_f32_f32>, size : i32){
+        unsafe{
+        let cstring = CString::new(name).expect("CString::new failed");
+        let cstr = CStr::from_bytes_with_nul_unchecked(cstring.to_bytes_with_nul());
+        let id = self.gl.GetUniformLocation(self.id,cstr.as_ptr() as *const gl::types::GLchar);
+        self.gl.Uniform3fv(id,size,val.as_ptr() as *const gl::types::GLfloat);
+        }
     }
 
     pub fn set_used(&self) {

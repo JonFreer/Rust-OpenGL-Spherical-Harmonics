@@ -26,6 +26,7 @@ fn main() {
 
 
 fn run() -> Result<(), failure::Error> {
+    let mut count = 0;
     //get the resource object which contains a path
     let res = resources::Resources::from_relative_exe_path(Path::new("assets")).map_err(err_msg)?;
 
@@ -52,12 +53,12 @@ fn run() -> Result<(), failure::Error> {
     }
 
     let triangle = triangle::Triangle::new(&res, &gl)?;
-    let plyModel = ply_model::PlyModel::new(&res, &gl)?;
+    let ply_model = ply_model::PlyModel::new(&res, &gl)?;
 
 
     // listen for events
     let mut event_pump = sdl.event_pump().map_err(err_msg)?;
-    
+    ply_model.setup();
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -69,10 +70,12 @@ fn run() -> Result<(), failure::Error> {
         unsafe {
             gl.Clear(gl::COLOR_BUFFER_BIT);
         }
-
+        
         triangle.render(&gl);
-        plyModel.render(&gl);
+        ply_model.render(&gl,count);
+        
         window.gl_swap_window();
+        count +=1;
     }
     Ok(())
 }

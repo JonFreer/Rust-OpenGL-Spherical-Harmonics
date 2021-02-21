@@ -2,6 +2,7 @@
 
 in VS_OUTPUT {
     vec3 Color;
+    vec3 Normal;
 } IN;
 
 out vec4 Color;

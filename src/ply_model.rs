@@ -1,5 +1,6 @@
 
 use crate::render_gl::{self, buffer, data};
+
 use crate::resources::Resources;
 use failure;
 use gl;
@@ -25,6 +26,7 @@ pub struct PlyModel {
     vao: buffer::VertexArray,
     ebo: buffer::ElementBuffer,
 }
+
 #[derive(Debug)]
 struct Face{
     points:(u32,u32,u32)
@@ -34,7 +36,7 @@ impl PlyModel {
     pub fn new(res: &Resources, gl: &gl::Gl) -> Result<PlyModel, failure::Error> {
         //load shaders into program
         let program = render_gl::Program::from_res(&gl, &res, "shaders/model")?;
-  
+        
         // set up a reader, in this case a file.
         let path = "assets/models/res2.ply";
         let mut f = std::fs::File::open(path).unwrap();
@@ -100,6 +102,7 @@ impl PlyModel {
             faces.push(Face{points:(a as u32,b as u32,c as u32)});
         }
 
+
         //Calculate Normals
 
         for f in &faces{ //sum normals for all faces to vertices
@@ -112,9 +115,11 @@ impl PlyModel {
             vertices[f.points.2 as usize].nrm += normal;
         }
 
-        for i in 0..vertices.len(){
-            vertices[i].nrm.normalize();
-        }
+        // for i in 0..vertices.len(){
+        //     vertices[i].nrm.normalize();
+        // }
+
+        //println!("{:?}",vertices);
 
         //create and load data into VBO
         let vbo = buffer::ArrayBuffer::new(&gl);
@@ -147,12 +152,45 @@ impl PlyModel {
         })
     }
 
-    pub fn render(&self, gl: &gl::Gl) {
+    fn gen_harmonics(&self, count_: i32) -> Vec::<data::f32_f32_f32>{
+        let mut sharm = Vec::<data::f32_f32_f32>::new();
+        let high = 0.5;
+        let low = -0.5;
+        let mut count = count_;
+        let base: i32 = 2; 
+        println!("{:?}",count);
+        sharm.push((1.0,1.0,1.0).into());
+        for i in 0..15{
+            if count as f32/(base.pow(14-i)) as f32 > 1.0{
+                sharm.push((high,high,high).into());
+                count = count - base.pow(14-i);
+            }else{
+                sharm.push((low,low,low).into());
+            }
+        }
+             
+        sharm
+    }
+
+    pub fn setup(&self){
+        
+
+    }
+
+    pub fn render(&self, gl: &gl::Gl, count : i32) {
         //renders triagnle based on loaded data
         // tell program to use shaders
+
+        let sharm = self.gen_harmonics(count);
+
         self.program.set_used();
+        self.program.set_vec3("lightColor",(1.0,1.0,1.0).into());
+        self.program.set_vec3("lightPos",(-1.0,1.0,1.0).into());
+        self.program.set_vec3_array("sharm", sharm,16);
+
         self.vao.bind();
         self.ebo.bind();
+        
         unsafe {
             
             // gl.DrawArrays(
@@ -163,4 +201,6 @@ impl PlyModel {
             gl.DrawElements(gl::TRIANGLES,800000,gl::UNSIGNED_INT,0 as *const gl::types::GLvoid);
         }
     }
+
+
 }
