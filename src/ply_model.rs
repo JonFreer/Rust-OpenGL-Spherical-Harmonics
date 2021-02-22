@@ -32,12 +32,12 @@ struct Face{
 }
 
 impl PlyModel {
-    pub fn new(res: &Resources, gl: &gl::Gl) -> Result<PlyModel, failure::Error> {
+    pub fn new(res: &Resources, gl: &gl::Gl, path : std::path::PathBuf) -> Result<PlyModel, failure::Error> {
         //load shaders into program
         let program = render_gl::Program::from_res(&gl, &res, "shaders/model")?;
         
         // set up a reader, in this case a file.
-        let path = "assets/models/res2.ply";
+        let path = path.as_path();
         let mut f = std::fs::File::open(path).unwrap();
 
         // create a parser

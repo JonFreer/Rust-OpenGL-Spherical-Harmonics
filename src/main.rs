@@ -15,12 +15,30 @@ use std::path::Path;
 use failure::err_msg;
 use render_gl::data;
 use render_gl::buffer;
-
+use std::env;
 //these two for
 use std::fs::File;
 use std::io::BufWriter;
 
 extern crate ply_rs;
+use structopt::StructOpt;
+
+/// Search for a pattern in a file and display the lines that contain it.
+#[derive(StructOpt,Debug)]
+#[structopt(rename_all = "kebab-case")]
+struct Cli {
+
+  /// Set speed
+    // we don't want to name it "speed", need to look smart
+    #[structopt(short = "i", long = "in")]
+    input: std::path::PathBuf,
+
+    #[structopt(short = "o", long = "out")]
+    output: std::path::PathBuf,
+
+    #[structopt(short = "n", long = "name")]
+    name: String,
+}
 
 
 fn main() {
@@ -29,28 +47,29 @@ fn main() {
     }
 }
 
-fn save_png(gl: &gl::Gl, count: i32){
+fn save_png(gl: &gl::Gl, count: i32, output: &std::path::PathBuf,name:&String){
     let mut result = [0 as u8; 3*256*256];
+
     unsafe{
         gl.ReadPixels(0,0, 256,256, gl::RGB,gl::UNSIGNED_BYTE,result.as_ptr() as *mut std::ffi::c_void);
     }
-    // println!("{:?}",result);
-
-    let together = format!("{}{}.png", "E:/Jon/rust_opengl/out/", count);
-    let path = Path::new(&together);
-    let file = File::create(path).unwrap();
+    let mut path = output.clone();
+    path.push(format!("{}{:0>5}.png",name,count.to_string()));
+    let file = File::create(path.as_path()).unwrap();
     let ref mut w = BufWriter::new(file);
-
     let mut encoder = png::Encoder::new(w, 256, 256); // Width is 2 pixels and height is 1.
     encoder.set_color(png::ColorType::RGB);
     encoder.set_depth(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
     
-    // writer.write_image_data(&result).unwrap(); // Save
+    writer.write_image_data(&result).unwrap(); // Save
 
 }
 
 fn run() -> Result<(), failure::Error> {
+    let args = Cli::from_args();
+    println!("{:?}", args);
+
     let mut count = 0;
     //get the resource object which contains a path
     let res = resources::Resources::from_relative_exe_path(Path::new("assets")).map_err(err_msg)?;
@@ -77,7 +96,7 @@ fn run() -> Result<(), failure::Error> {
     }
 
     // let triangle = triangle::Triangle::new(&res, &gl)?;
-    let ply_model = ply_model::PlyModel::new(&res, &gl)?;
+    let ply_model = ply_model::PlyModel::new(&res, &gl,args.input)?;
 
 
     // listen for events
@@ -100,7 +119,7 @@ fn run() -> Result<(), failure::Error> {
         
         window.gl_swap_window();
         count +=1;
-        save_png(&gl,count);
+        save_png(&gl,count,&args.output, &args.name);
     }
     Ok(())
 }
