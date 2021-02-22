@@ -4,6 +4,8 @@ uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 sharm[16];
 const float M_PI = 3.14159265358979323846;
+const float contrast = 0.2f;
+const float brightnes = -0.5f;
 in VS_OUTPUT {
     vec3 Color;
     vec3 Normal;
@@ -13,42 +15,9 @@ in VS_OUTPUT {
 out vec4 Color;
 
 
-vec3 lightNormal(vec3 d)
-{
-  vec3 colour = sharm[0];
-
-  float x2 = d.x * d.x;
-  float y2 = d.y * d.y;
-  float z2 = d.z * d.z;
-
-  //colour += sharm[1 ] * d.y;
-//   colour += sharm[2 ] * d.z;
-  colour += sharm[3 ] * d.x;
-
-//   colour += sharm[4 ] * (d.x * d.y);
-//   colour += sharm[5 ] * (d.y * d.z);
-//   colour += sharm[6 ] * (2.0f * z2 - y2 - x2);
-//   colour += sharm[7 ] * (d.x * d.z);
-//   colour += sharm[8 ] * (x2 - y2);
-
-//   colour += sharm[9 ] * d.y*(3.0f*x2-y2);
-//   colour += sharm[10] * d.x*d.y*d.z;
-//   colour += sharm[11] * d.y*(4.0f*z2-y2-x2);
-//   colour += sharm[12] * d.z*(2.0f*z2-3.0f*y2-3.0f*x2);
-//   colour += sharm[13] * d.x*(4.0f*z2-3.0f*y2-3.0f*x2);
-//   colour += sharm[14] * (x2-y2)*d.z;
-//   colour += sharm[15] * d.x*(x2-3.0f*y2);
-
-  colour.x = max(0,colour.x);
-  colour.y = max(0,colour.y);
-  colour.z = max(0,colour.z);
-  return colour;
-}
-
-
+//Taken from https://github.com/jingyangcarl/SphericalHarmonicsLighting/blob/master/SphericalHarmonicsLighting/Object.fsh
 vec3 sph_harm(vec3 normal){
         
-
 		// spherical harmonics lighting
 		float x = normal.x;
 		float y = normal.y;
@@ -84,12 +53,14 @@ vec3 sph_harm(vec3 normal){
 		vec3 shColor = vec3(0.0, 0.0, 0.0);
 		for (int i = 0; i < 16; i++) shColor += sharm[i].x * basis[i];
 
-        // // contrast
-		// shColor = (shColor - 0.5f) * 1 + 0.5f;
-		// // brightnes
-		// shColor += -1;
+		shColor.x = max(0,shColor.x);
+		shColor.y = max(0,shColor.y);
+		shColor.z = max(0,shColor.z);
+        // contrast
+		shColor = (shColor - 0.5f) * contrast + 0.5f;
+		// brightnes
+		shColor += brightnes;
 
-		// add spherical harmonic lighting
 		return shColor;
 
 
@@ -97,18 +68,6 @@ vec3 sph_harm(vec3 normal){
 
 void main()
 {
-    vec3 norm = normalize(IN.Normal);
-    vec3 lightDir = normalize(lightPos - IN.Position);  
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
-    vec3 result = ( diffuse) * IN.Color;
-    // if (sharm[15].x == 0.6f){
-    //     Color = vec4(1.0f,1.0f,0.0f,1.0f);
-    // }else{
-    // Color = vec4(lightNormal(normalize(IN.Normal))*IN.Color, 1.0f); //lightNormal(normalize(IN.Normal))*
-    // }
-    // Color = vec4(result,1.0f);
-    //Color = vec4(-IN.Normal*10, 1.0f);
 
-    Color = vec4(sph_harm(normalize(IN.Normal))*IN.Color,1.0f);
+    Color = vec4(sph_harm(normalize(IN.Normal))+IN.Color,1.0f); //Add here but can also mul
 }

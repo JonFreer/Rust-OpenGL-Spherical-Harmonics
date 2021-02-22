@@ -19,7 +19,6 @@ struct Vertex {
     
 }
 
-
 pub struct PlyModel {
     program: render_gl::Program,
     vbo: buffer::ArrayBuffer,
@@ -50,10 +49,6 @@ impl PlyModel {
         // make sure it did work
         assert!(ply.is_ok());
         let ply = ply.unwrap();
-
-        // proof that data has been read
-        println!("Ply header: {:#?}", ply.header);
-        println!("Ply data: {:#?}", ply.payload["face"][0]["vertex_indices"]);
 
         // Load veticies 
         let mut vertices = Vec::<Vertex>::new();
@@ -115,11 +110,10 @@ impl PlyModel {
             vertices[f.points.2 as usize].nrm += normal;
         }
 
+        //normalize vertex 
         // for i in 0..vertices.len(){
         //     vertices[i].nrm.normalize();
         // }
-
-        //println!("{:?}",vertices);
 
         //create and load data into VBO
         let vbo = buffer::ArrayBuffer::new(&gl);
@@ -158,7 +152,7 @@ impl PlyModel {
         let low = -0.5;
         let mut count = count_;
         let base: i32 = 2; 
-        println!("{:?}",count);
+
         sharm.push((1.0,1.0,1.0).into());
         for i in 0..15{
             if count as f32/(base.pow(14-i)) as f32 > 1.0{
@@ -168,7 +162,7 @@ impl PlyModel {
                 sharm.push((low,low,low).into());
             }
         }
-             
+        
         sharm
     }
 
@@ -192,12 +186,6 @@ impl PlyModel {
         self.ebo.bind();
         
         unsafe {
-            
-            // gl.DrawArrays(
-            //     gl::TRIANGLES, // mode
-            //     0,             // starting index in the enabled arrays
-            //     6*80000,             // number of indices to be rendered
-            // );data.as_ptr() as *const gl::types::GLvoid
             gl.DrawElements(gl::TRIANGLES,800000,gl::UNSIGNED_INT,0 as *const gl::types::GLvoid);
         }
     }
