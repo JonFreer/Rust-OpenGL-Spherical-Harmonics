@@ -101,7 +101,7 @@ fn run() -> Result<(), failure::Error> {
 
     // listen for events
     let mut event_pump = sdl.event_pump().map_err(err_msg)?;
-    ply_model.setup();
+    
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -118,8 +118,11 @@ fn run() -> Result<(), failure::Error> {
         ply_model.render(&gl,count);
         
         window.gl_swap_window();
-        count +=1;
         save_png(&gl,count,&args.output, &args.name);
+        count +=1;
+        if count==32768{ //exit program when number of sample reached
+            break 'main
+        }
     }
     Ok(())
 }

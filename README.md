@@ -1,6 +1,8 @@
 # Shperical Harmonic Lighting Dataset Generation
 
-Loads in directory of .ply models and renders out 2^15 images per model altering the spherical harmonic lighting coefficients.
+Loads in .ply model and renders out 2^15 images per model altering the spherical harmonic lighting coefficients.
+
+Dataset generation for: https://vision.uvic.ca/pubs/2017/mandl2017learning/paper.pdf
 
 ## Use 
 

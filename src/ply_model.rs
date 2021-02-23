@@ -155,7 +155,7 @@ impl PlyModel {
 
         sharm.push((1.0,1.0,1.0).into());
         for i in 0..15{
-            if count as f32/(base.pow(14-i)) as f32 > 1.0{
+            if count as f32/(base.pow(14-i)) as f32 >= 1.0{
                 sharm.push((high,high,high).into());
                 count = count - base.pow(14-i);
             }else{
@@ -164,11 +164,6 @@ impl PlyModel {
         }
         
         sharm
-    }
-
-    pub fn setup(&self){
-        
-
     }
 
     pub fn render(&self, gl: &gl::Gl, count : i32) {
