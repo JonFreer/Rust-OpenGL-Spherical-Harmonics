@@ -673,6 +673,7 @@ dependencies = [
  "gl",
  "ply-rs",
  "png",
+ "rand",
  "render_gl_derive",
  "sdl2",
  "structopt",

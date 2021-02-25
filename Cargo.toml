@@ -14,6 +14,7 @@ render_gl_derive = {path="render_gl_derive"}
 ply-rs = "0.1.3"
 png = "0.16.8"
 structopt = "0.3.13"
+rand = "0.8.3"
 
 [features]
 gl_debug = ["gl/debug"]

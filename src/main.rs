@@ -16,6 +16,7 @@ use failure::err_msg;
 use render_gl::data;
 use render_gl::buffer;
 use std::env;
+use rand::Rng;
 //these two for
 use std::fs::File;
 use std::io::BufWriter;
@@ -38,6 +39,10 @@ struct Cli {
 
     #[structopt(short = "n", long = "name")]
     name: String,
+
+    #[structopt(short = "f", long = "frequency" ,default_value = "1.0")]
+    freq: i32,
+
 }
 
 
@@ -70,7 +75,9 @@ fn run() -> Result<(), failure::Error> {
     let args = Cli::from_args();
     println!("{:?}", args);
 
-    let mut count = 0;
+    let mut count = -1;
+    let mut rng = rand::thread_rng();
+
     //get the resource object which contains a path
     let res = resources::Resources::from_relative_exe_path(Path::new("assets")).map_err(err_msg)?;
 
@@ -118,9 +125,14 @@ fn run() -> Result<(), failure::Error> {
         ply_model.render(&gl,count);
         
         window.gl_swap_window();
-        save_png(&gl,count,&args.output, &args.name);
-        count +=1;
-        if count==32768{ //exit program when number of sample reached
+        if count>=0{
+            save_png(&gl,count,&args.output, &args.name);
+        }
+        
+
+        count += rng.gen_range(1..=args.freq);
+        
+        if count>=32768{ //exit program when number of sample reached
             break 'main
         }
     }

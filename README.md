@@ -9,5 +9,6 @@ Dataset generation for: https://vision.uvic.ca/pubs/2017/mandl2017learning/paper
 - -i, --input: input model .ply
 - -o, --ouput: output directory for images
 - -n, --name: name of ouput
+- -f, --freq: frequency of harmonics
 
-```cargo run -- -i=E:\Jon\rust_opengl\game\assets\models\res2.ply -o=E:\Jon\rust_opengl\out -n=Jon```
+```cargo run -- -i=E:\Jon\rust_opengl\assets\models\res2.ply -o=E:\Jon\rust_opengl\out -n=Jon -f=5```

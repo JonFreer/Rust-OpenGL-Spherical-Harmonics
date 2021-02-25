@@ -53,9 +53,9 @@ vec3 sph_harm(vec3 normal){
 		vec3 shColor = vec3(0.0, 0.0, 0.0);
 		for (int i = 0; i < 16; i++) shColor += sharm[i].x * basis[i];
 
-		shColor.x = max(0,shColor.x);
-		shColor.y = max(0,shColor.y);
-		shColor.z = max(0,shColor.z);
+		// shColor.x = max(0,shColor.x);
+		// shColor.y = max(0,shColor.y);
+		// shColor.z = max(0,shColor.z);
         // contrast
 		shColor = (shColor - 0.5f) * contrast + 0.5f;
 		// brightnes
