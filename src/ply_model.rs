@@ -69,7 +69,11 @@ impl PlyModel {
                     ("red", ply::ply::Property::UChar(v)) => r = *v as f32,
                     ("green", ply::ply::Property::UChar(v)) => g = *v as f32,
                     ("blue", ply::ply::Property::UChar(v)) => b = *v as f32,
+                    ("x", ply::ply::Property::Double(v)) => x = *v as f32,
+                    ("y", ply::ply::Property::Double(v)) => y = *v as f32,
+                    ("z", ply::ply::Property::Double(v)) => z = *v as f32,
                     ("alpha", _) =>(),
+                    
                     (k, _) => panic!("Vertex: Unexpected key/value combination: key: {}", k),
                 }
             }
@@ -171,6 +175,36 @@ impl PlyModel {
         // tell program to use shaders
 
         let sharm = self.gen_harmonics(count);
+
+        self.program.set_used();
+        self.program.set_vec3("lightColor",(1.0,1.0,1.0).into());
+        self.program.set_vec3("lightPos",(-1.0,1.0,1.0).into());
+        self.program.set_vec3_array("sharm", sharm,16);
+
+        self.vao.bind();
+        self.ebo.bind();
+        
+        unsafe {
+            gl.DrawElements(gl::TRIANGLES,800000,gl::UNSIGNED_INT,0 as *const gl::types::GLvoid);
+        }
+    }
+    fn gen_harmonics_string(&self, harmonic_string: &String) -> Vec::<data::f32_f32_f32>{
+        let mut sharm = Vec::<data::f32_f32_f32>::new();
+        sharm.push((1.0,1.0,1.0).into());
+        let v: Vec<&str> =harmonic_string.split('_').collect();
+        println!("{:?}", v);
+        for i in 0..15{
+            let val = v[i].parse::<f32>().unwrap();
+            sharm.push((val,val,val).into());
+        }
+        sharm
+    }
+
+    pub fn render_single(&self, gl: &gl::Gl,harmonic_string: &String) {
+        //renders triagnle based on loaded data
+        // tell program to use shaders
+
+        let sharm = self.gen_harmonics_string(&harmonic_string);
 
         self.program.set_used();
         self.program.set_vec3("lightColor",(1.0,1.0,1.0).into());

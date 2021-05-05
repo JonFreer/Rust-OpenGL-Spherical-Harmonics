@@ -40,6 +40,12 @@ struct Cli {
     #[structopt(short = "n", long = "name")]
     name: String,
 
+    #[structopt(short = "h", long = "harmonic",default_value = "1.0")]
+    harmonic: String,
+
+    #[structopt(short = "s", long = "sequence",default_value = "1.0")]
+    sequence: i32,
+
     #[structopt(short = "f", long = "frequency" ,default_value = "1.0")]
     freq: i32,
 
@@ -51,6 +57,7 @@ fn main() {
         println!("{}", debug::failure_to_string(e));
     }
 }
+
 
 fn save_png(gl: &gl::Gl, count: i32, output: &std::path::PathBuf,name:&String){
     let mut result = [0 as u8; 3*256*256];
@@ -122,18 +129,32 @@ fn run() -> Result<(), failure::Error> {
         }
         
         // triangle.render(&gl);
-        ply_model.render(&gl,count);
-        
-        window.gl_swap_window();
-        if count>=0{
-            save_png(&gl,count,&args.output, &args.name);
-        }
-        
 
-        count += rng.gen_range(1..=args.freq);
-        
-        if count>=32768{ //exit program when number of sample reached
-            break 'main
+        if 1==args.sequence{
+            ply_model.render(&gl,count);
+            
+            window.gl_swap_window();
+            if count>=0{
+                save_png(&gl,count,&args.output, &args.name);
+            }
+            
+
+            count += rng.gen_range(1..=args.freq);
+            
+            if count>=32768{ //exit program when number of sample reached
+                break 'main
+            }
+        }else{
+            
+            ply_model.render_single(&gl,&args.harmonic);
+            window.gl_swap_window();
+            save_png(&gl,0,&args.output, &args.name);
+            
+            if count>=3{
+                break 'main
+            }
+
+            count += 1;
         }
     }
     Ok(())
